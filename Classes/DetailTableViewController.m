@@ -36,17 +36,9 @@ typedef enum { SectionDetailSummary } DetailRows;
 
 @implementation DetailTableViewController
 
-@synthesize item, dateString, summaryString;
-
 #pragma mark -
 #pragma mark Initialization
 
-- (id)initWithStyle:(UITableViewStyle)style {
-    if ((self = [super initWithStyle:style])) {
-		
-    }
-    return self;
-}
 
 #pragma mark -
 #pragma mark View lifecycle
@@ -56,39 +48,86 @@ typedef enum { SectionDetailSummary } DetailRows;
 	// Super
     [super viewDidLoad];
 
+	
+}
+
+- (void) viewWillAppear:(BOOL)animated
+{
 	// Date
-	if (item.date) {
+	if (self.item.date) {
 		NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
 		[formatter setDateStyle:NSDateFormatterMediumStyle];
 		[formatter setTimeStyle:NSDateFormatterMediumStyle];
-		self.dateString = [formatter stringFromDate:item.date];
+		self.dateString = [formatter stringFromDate:self.item.date];
 		[formatter release];
 	}
 	
 	// Summary
-	if (item.summary) {
-		self.summaryString = [item.summary stringByConvertingHTMLToPlainText];
+	if (self.item.summary) {
+		self.summaryString = [self.item.summary stringByConvertingHTMLToPlainText];
 	} else {
 		self.summaryString = @"[No Summary]";
 	}
-	
+
+    self.summaryView.text = self.summaryString;
+    
+    if (self.speechController) {
+        self.speechController.speechUIDelegate = self;
+        [self.speechController say:self.summaryString];
+    }
+    
+    [super viewWillAppear:animated];
+    
+}
+- (void) viewDidAppear:(BOOL)animated
+{
+    //[self.itemTableView reloadData];
+    [super viewDidAppear:animated];
+
+}
+
+- (void) viewWillDisappear:(BOOL)animated
+{
+    if (self.speechController) {
+        [self.speechController stop];
+    }
+}
+
+- (void) showUIToStartSpeaking
+{
+    [self.summaryView becomeFirstResponder];
+    [self.summaryView setSelectedTextRange:nil];
+}
+
+- (void) showUIForSpeakingRange:(NSRange)range ofSpeechString:(NSString *)string
+{
+    [self.summaryView setSelectedRange:range];
+    [self.summaryView scrollRangeToVisible:range];
+}
+
+- (void) showUIToStopSpeaking
+{
+    [self.summaryView setSelectedTextRange:nil];
+}
+
+- (void) textViewDidBeginEditing:(UITextView *)textView
+{
+    [textView setSelectedRange:NSMakeRange(0, 0)];
 }
 
 #pragma mark -
 #pragma mark Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    // Return the number of sections.
-    return 2;
+    return 1;
 }
 
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     // Return the number of rows in the section.
-	switch (section) {
-		case 0: return 3;
-		default: return 1;
-	}
+    NSInteger retVal = 3;
+    return retVal;
+    
 }
 
 // Customize the appearance of table view cells.
@@ -105,10 +144,10 @@ typedef enum { SectionDetailSummary } DetailRows;
 	// Display
 	cell.textLabel.textColor = [UIColor blackColor];
 	cell.textLabel.font = [UIFont systemFontOfSize:15];
-	if (item) {
+	if (self.item) {
 		
 		// Item Info
-		NSString *itemTitle = item.title ? [item.title stringByConvertingHTMLToPlainText] : @"[No Title]";
+		NSString *itemTitle = self.item.title ? [self.item.title stringByConvertingHTMLToPlainText] : @"[No Title]";
 		
 		// Display
 		switch (indexPath.section) {
@@ -121,10 +160,10 @@ typedef enum { SectionDetailSummary } DetailRows;
 						cell.textLabel.text = itemTitle;
 						break;
 					case SectionHeaderDate:
-						cell.textLabel.text = dateString ? dateString : @"[No Date]";
+						cell.textLabel.text = self.dateString ? self.dateString : @"[No Date]";
 						break;
 					case SectionHeaderURL:
-						cell.textLabel.text = item.link ? item.link : @"[No Link]";
+						cell.textLabel.text = self.item.link ? self.item.link : @"[No Link]";
 						cell.textLabel.textColor = [UIColor blueColor];
 						cell.selectionStyle = UITableViewCellSelectionStyleBlue;
 						break;
@@ -135,7 +174,7 @@ typedef enum { SectionDetailSummary } DetailRows;
 			case SectionDetail: {
 				
 				// Summary
-				cell.textLabel.text = summaryString;
+				cell.textLabel.text = self.summaryString;
 				cell.textLabel.numberOfLines = 0; // Multiline
 				break;
 				
@@ -146,7 +185,7 @@ typedef enum { SectionDetailSummary } DetailRows;
     return cell;
 	
 }
-
+/*
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
 	if (indexPath.section == SectionHeader) {
 		
@@ -157,39 +196,43 @@ typedef enum { SectionDetailSummary } DetailRows;
 		
 		// Get height of summary
 		NSString *summary = @"[No Summary]";
-		if (summaryString) summary = summaryString;
-		CGSize s = [summary sizeWithFont:[UIFont systemFontOfSize:15] 
+		if (self.summaryString) summary = self.summaryString;
+		CGSize s = [summary sizeWithFont:[UIFont systemFontOfSize:15]
 					   constrainedToSize:CGSizeMake(self.view.bounds.size.width - 40, MAXFLOAT)  // - 40 For cell padding
-						   lineBreakMode:UILineBreakModeWordWrap];
+						   lineBreakMode:NSLineBreakByWordWrapping];
 		return s.height + 16; // Add padding
 		
 	}
 }
-
+*/
 #pragma mark -
 #pragma mark Table view delegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-
+/*
 	// Open URL
 	if (indexPath.section == SectionHeader && indexPath.row == SectionHeaderURL) {
-		if (item.link) {
-			[[UIApplication sharedApplication] openURL:[NSURL URLWithString:item.link]];
+		if (self.item.link) {
+			[[UIApplication sharedApplication] openURL:[NSURL URLWithString:self.item.link]];
 		}
 	}
 	
 	// Deselect
-	[self.tableView deselectRowAtIndexPath:indexPath animated:YES];
-
+	[tableView deselectRowAtIndexPath:indexPath animated:YES];
+*/
 }
 
 #pragma mark -
 #pragma mark Memory management
 
 - (void)dealloc {
-	[dateString release];
-	[summaryString release];
-	[item release];
+    self.dateString = nil;
+    self.summaryString = nil;
+    self.item = nil;
+    self.itemTableView = nil;
+    self.summaryView = nil;
+    self.speechController = nil;
+
     [super dealloc];
 }
 

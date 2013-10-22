@@ -29,6 +29,7 @@
 
 #import <UIKit/UIKit.h>
 #import "MWFeedParser.h"
+#import "SimpleSpeechController.h"
 
 @interface RootViewController : UITableViewController <MWFeedParserDelegate> {
 	
@@ -44,5 +45,7 @@
 
 // Properties
 @property (nonatomic, retain) NSArray *itemsToDisplay;
+
+@property (nonatomic, strong) SimpleSpeechController *speechController;
 
 @end

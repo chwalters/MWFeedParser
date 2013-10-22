@@ -29,13 +29,15 @@
 
 #import <UIKit/UIKit.h>
 #import "MWFeedItem.h"
+#import "SimpleSpeechController.h"
 
-@interface DetailTableViewController : UITableViewController {
-	MWFeedItem *item;
-	NSString *dateString, *summaryString;
+@interface DetailTableViewController : UIViewController <UITableViewDataSource, UITableViewDelegate, UITextViewDelegate, SimpleSpeechUIDelegate> {
 }
 
 @property (nonatomic, retain) MWFeedItem *item;
 @property (nonatomic, retain) NSString *dateString, *summaryString;
+@property (nonatomic, retain) SimpleSpeechController *speechController;
+@property (nonatomic, retain) IBOutlet UITextView *summaryView;
+@property (nonatomic, retain) IBOutlet UITableView *itemTableView;
 
 @end

@@ -52,6 +52,9 @@
 	parsedItems = [[NSMutableArray alloc] init];
 	self.itemsToDisplay = [NSArray array];
 	
+    // Setup speech controller
+    self.speechController = [[[SimpleSpeechController alloc] init] autorelease];
+    
 	// Refresh button
 	self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh 
 																							target:self 
@@ -64,6 +67,7 @@
 	feedParser.connectionType = ConnectionTypeAsynchronously;
 	[feedParser parse];
 
+    
 }
 
 #pragma mark -
@@ -176,13 +180,15 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
 	// Show detail
-	DetailTableViewController *detail = [[DetailTableViewController alloc] initWithStyle:UITableViewStyleGrouped];
+    DetailTableViewController *detail = [[[DetailTableViewController alloc] initWithNibName:@"DetailViewController" bundle:nil] autorelease];
 	detail.item = (MWFeedItem *)[itemsToDisplay objectAtIndex:indexPath.row];
+    // set the speech controller
+    detail.speechController = self.speechController;
 	[self.navigationController pushViewController:detail animated:YES];
 	[detail release];
 	
 	// Deselect
-	[self.tableView deselectRowAtIndexPath:indexPath animated:YES];
+	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	
 }
 
